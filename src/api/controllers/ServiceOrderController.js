@@ -1,11 +1,14 @@
 import { CreateServiceOrderCommand, CreateMaterialCommand } from '../../application/ServiceOrderAggregate/Commands/CreateServiceOrder/CreateServiceOrderCommand.js';
 import { GetAllServiceOrdersQuery } from '../../application/ServiceOrderAggregate/Queries/GetAllServiceOrders/GetAllServiceOrdersQuery.js';
+import { ClassifyHazardousCommand } from '../../application/ServiceOrderAggregate/Commands/ClassifyHazardous/ClassifyHazardousCommand.js';
+import { TriggerAnalysisCommand } from '../../application/ServiceOrderAggregate/Commands/TriggerAnalysis/TriggerAnalysisCommand.js';
 
 export class ServiceOrderController {
-  constructor(createServiceOrderHandler, getAllServiceOrdersHandler, materialAnalysisScheduler) {
+  constructor(createServiceOrderHandler, getAllServiceOrdersHandler, triggerAnalysisHandler, classifyHazardousHandler) {
     this.createServiceOrderHandler = createServiceOrderHandler;
     this.getAllServiceOrdersHandler = getAllServiceOrdersHandler;
-    this.materialAnalysisScheduler = materialAnalysisScheduler;
+    this.triggerAnalysisHandler = triggerAnalysisHandler;
+    this.classifyHazardousHandler = classifyHazardousHandler;
   }
 
 
@@ -37,14 +40,9 @@ export class ServiceOrderController {
     try {
       const { customerName, companyName, appointmentDate, materials } = req.body;
 
-      console.log('Request body:', req.body);
-      console.log('Materials:', materials);
-
-      const materialCommands = materials.map(m => {
-        console.log('Creating material command:', m);
-        return new CreateMaterialCommand(m.description, m.product);
-      });
-      console.log('Material commands:', materialCommands);
+      const materialCommands = materials.map(m => 
+        new CreateMaterialCommand(m.description, m.product)
+      );
 
       const command = new CreateServiceOrderCommand(
         customerName,
@@ -63,14 +61,33 @@ export class ServiceOrderController {
 
   async triggerAnalysis(req, res) {
     try {
-      console.log('Manual analysis trigger requested');
-      await this.materialAnalysisScheduler.triggerProcessing();
-      res.status(200).json({
-        message: 'Material analysis process triggered successfully',
-        timestamp: new Date().toISOString()
-      });
+      const command = new TriggerAnalysisCommand();
+      const result = await this.triggerAnalysisHandler.handle(command);
+      res.status(200).json(result.toJSON());
     } catch (error) {
       console.error('Error triggering analysis:', error);
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  async classifyHazardous(req, res) {
+    try {
+      const { serviceOrderId } = req.params;
+      
+      if (!serviceOrderId) {
+        return res.status(400).json({ error: 'Service order ID is required' });
+      }
+
+      const command = new ClassifyHazardousCommand(serviceOrderId);
+      const result = await this.classifyHazardousHandler.handle(command);
+      res.status(200).json(result.toJSON());
+    } catch (error) {
+      console.error('Error classifying service order:', error);
+      
+      if (error.message === 'Service order not found') {
+        return res.status(404).json({ error: error.message });
+      }
+      
       res.status(500).json({ error: error.message });
     }
   }

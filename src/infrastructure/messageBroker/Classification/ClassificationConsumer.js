@@ -3,11 +3,12 @@ import { ServiceOrderRepository } from '../../repositories/ServiceOrderRepositor
 import { MaterialRepository } from '../../repositories/MaterialRepository.js';
 
 export class ClassificationConsumer {
-    constructor() {
+    constructor(classificationService = null) {
         this.connection = null;
         this.channel = null;
         this.serviceOrderRepository = new ServiceOrderRepository();
         this.materialRepository = new MaterialRepository();
+        this.classificationService = classificationService;
         this.queueName = 'classification_queue';
         this.exchangeName = 'classification_exchange';
         this.resultsQueueName = 'classification_results';
@@ -16,7 +17,8 @@ export class ClassificationConsumer {
 
     async connect() {
         try {
-            const rabbitmqUrl = process.env.RABBITMQ_URL || `amqp://'admin':'admin'@wms-rabbitmq:5672`;
+            const rabbitmqUrl = process.env.RABBITMQ_URL || 'amqp://admin:admin@wms-rabbitmq:5672';
+            console.log('Connecting to RabbitMQ...');
             this.connection = await amqp.connect(rabbitmqUrl);
             this.channel = await this.connection.createChannel();
 

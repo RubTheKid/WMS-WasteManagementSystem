@@ -51,7 +51,7 @@ services:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_USER: admin
       RABBITMQ_PASSWORD: admin
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
       JWT_SECRET: wms-super-secret-jwt-key-2024
       JWT_EXPIRES_IN: 24h
     ports:

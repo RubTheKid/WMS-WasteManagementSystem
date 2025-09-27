@@ -17,6 +17,7 @@
     "test:login": "node test-login.js"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "amqplib": "^0.10.9",
     "bcryptjs": "^2.4.3",
     "compromise": "^14.14.4",
@@ -26,7 +27,6 @@
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "natural": "^8.1.0",
-    "openai": "^4.20.1",
     "pg": "^8.11.3",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",

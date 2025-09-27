@@ -133,5 +133,97 @@ export function createServiceOrderRoutes(serviceOrderController) {
      */
     router.post('/analyze', authMiddleware.requireEmployee, serviceOrderController.triggerAnalysis.bind(serviceOrderController));
 
+    /**
+     * @swagger
+     * /api/v1/service-orders/{serviceOrderId}/classify-hazardous:
+     *   post:
+     *     summary: Classify service order as hazardous or non-hazardous
+     *     description: Use ML algorithm to classify if a service order contains potentially hazardous materials
+     *     tags: [Service Orders]
+     *     security:
+     *       - bearerAuth: []
+     *     parameters:
+     *       - in: path
+     *         name: serviceOrderId
+     *         required: true
+     *         schema:
+     *           type: string
+     *         description: Service order ID to classify
+     *     responses:
+     *       200:
+     *         description: Classification completed successfully
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 serviceOrderId:
+     *                   type: string
+     *                 classification:
+     *                   type: object
+     *                   properties:
+     *                     classification:
+     *                       type: string
+     *                       enum: [hazardous, non-hazardous]
+     *                     confidence:
+     *                       type: number
+     *                       minimum: 0
+     *                       maximum: 1
+     *                     originalText:
+     *                       type: string
+     *                     normalizedText:
+     *                       type: string
+     *                     timestamp:
+     *                       type: string
+     *                       format: date-time
+     *                 modelMetrics:
+     *                   type: object
+     *                   properties:
+     *                     modelWeights:
+     *                       type: object
+     *                     thresholds:
+     *                       type: object
+     *                     keywordCounts:
+     *                       type: object
+     *                     targetAccuracy:
+     *                       type: number
+     *                     modelType:
+     *                       type: string
+     *                 timestamp:
+     *                   type: string
+     *                   format: date-time
+     *       400:
+     *         description: Invalid request data
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/ErrorResponse'
+     *       401:
+     *         description: Authentication required
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/ErrorResponse'
+     *       403:
+     *         description: Employee or admin access required
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/ErrorResponse'
+     *       404:
+     *         description: Service order not found
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/ErrorResponse'
+     *       500:
+     *         description: Internal server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/ErrorResponse'
+     */
+    router.post('/:serviceOrderId/classify-hazardous', authMiddleware.requireEmployee, serviceOrderController.classifyHazardous.bind(serviceOrderController));
+
     return router;
 }

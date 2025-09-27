@@ -6,13 +6,11 @@ export class MaterialAnalysisScheduler {
         this.isProcessing = false;
     }
 
-    start(intervalMs = 30000) { // Default: check every 30 seconds
+    start(intervalMs = 30000) {  //check every 30 seconds
         console.log('Material Analysis Scheduler started');
 
-        // Run immediately
         this.processUnanalyzedMaterials();
 
-        // Then run on interval
         this.intervalId = setInterval(() => {
             this.processUnanalyzedMaterials();
         }, intervalMs);
@@ -37,13 +35,11 @@ export class MaterialAnalysisScheduler {
         try {
             console.log('Checking for unanalyzed materials...');
 
-            // Get all service orders to check for unanalyzed materials
             const serviceOrders = await this.serviceOrderRepository.findAll();
 
             let materialsToProcess = [];
 
             for (const serviceOrder of serviceOrders) {
-                // Find materials that haven't been analyzed yet
                 const unanalyzedMaterials = serviceOrder.materials.filter(
                     material => !material.aiClassification || material.aiClassification === null
                 );
@@ -84,7 +80,6 @@ export class MaterialAnalysisScheduler {
         }
     }
 
-    // Method to manually trigger processing
     async triggerProcessing() {
         await this.processUnanalyzedMaterials();
     }

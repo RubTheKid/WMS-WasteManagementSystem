@@ -1,12 +1,10 @@
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { UserRepository } from '../../infrastructure/repositories/UserRepository.js';
+import { LoginCommand } from '../../application/UserAggregate/Commands/Login/LoginCommand.js';
+import { VerifyTokenCommand } from '../../application/UserAggregate/Commands/VerifyToken/VerifyTokenCommand.js';
 
 export class AuthController {
-    constructor() {
-        this.userRepository = new UserRepository();
-        this.jwtSecret = process.env.JWT_SECRET || 'your-secret-key';
-        this.jwtExpiresIn = process.env.JWT_EXPIRES_IN || '24h';
+    constructor(loginHandler, verifyTokenHandler) {
+        this.loginHandler = loginHandler;
+        this.verifyTokenHandler = verifyTokenHandler;
     }
 
     async login(req, res) {
@@ -20,44 +18,27 @@ export class AuthController {
                 });
             }
 
-            const user = await this.userRepository.findByEmail(email);
-            if (!user) {
-                return res.status(401).json({
-                    success: false,
-                    message: 'Invalid email or password'
-                });
-            }
-
-            // Check password
-            const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
-            if (!isPasswordValid) {
-                return res.status(401).json({
-                    success: false,
-                    message: 'Invalid email or password'
-                });
-            }
-
-            const token = jwt.sign(
-                {
-                    userId: user.id,
-                    email: user.email,
-                    role: user.role
-                },
-                this.jwtSecret,
-                { expiresIn: this.jwtExpiresIn }
-            );
-
-            res.json({
-                success: true,
-                message: 'Login successful',
-                data: {
-                    token,
-                    user: user.toSafeJSON()
-                }
-            });
+            const command = new LoginCommand(email, password);
+            const result = await this.loginHandler.handle(command);
+            res.json(result.toJSON());
 
         } catch (error) {
             console.error('Login error:', error);
+            
+            if (error.message === 'Invalid email or password') {
+                return res.status(401).json({
+                    success: false,
+                    message: error.message
+                });
+            }
+            
+            if (error.message.includes('Email') || error.message.includes('Password')) {
+                return res.status(400).json({
+                    success: false,
+                    message: error.message
+                });
+            }
+            
             res.status(500).json({
                 success: false,
                 message: 'Internal server error'
@@ -76,22 +57,9 @@ export class AuthController {
                 });
             }
 
-            const decoded = jwt.verify(token, this.jwtSecret);
-            const user = await this.userRepository.findById(decoded.userId);
-
-            if (!user) {
-                return res.status(401).json({
-                    success: false,
-                    message: 'Invalid token'
-                });
-            }
-
-            res.json({
-                success: true,
-                data: {
-                    user: user.toSafeJSON()
-                }
-            });
+            const command = new VerifyTokenCommand(token);
+            const result = await this.verifyTokenHandler.handle(command);
+            res.json(result.toJSON());
 
         } catch (error) {
             console.error('Token verification error:', error);

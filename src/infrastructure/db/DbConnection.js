@@ -5,11 +5,11 @@ class DbConnection {
 
   constructor() {
     this.pool = new Pool({
-      host: 'localhost',
-      port: '5432',
-      database: 'wms_db',
-      user: 'postgres',
-      password: 'postgres',
+      host: process.env.DB_HOST || 'postgres',
+      port: process.env.DB_PORT || '5432',
+      database: process.env.DB_NAME || 'wms_db',
+      user: process.env.DB_USER || 'postgres',
+      password: process.env.DB_PASSWORD || 'postgres',
       max: 20,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 2000,
@@ -32,11 +32,16 @@ class DbConnection {
   }
 
   async query(text, params) {
-    const client = await this.getClient();
     try {
-      return await client.query(text, params);
-    } finally {
-      client.release();
+      const client = await this.getClient();
+      try {
+        return await client.query(text, params);
+      } finally {
+        client.release();
+      }
+    } catch (error) {
+      console.error('Database query error:', error.message);
+      throw error;
     }
   }
 

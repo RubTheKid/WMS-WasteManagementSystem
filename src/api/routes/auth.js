@@ -1,8 +1,7 @@
 import express from 'express';
-import { AuthController } from '../controllers/AuthController.js';
 
-const router = express.Router();
-const authController = new AuthController();
+export function createAuthRoutes(authController) {
+    const router = express.Router();
 
 /**
  * @swagger
@@ -80,4 +79,5 @@ router.post('/login', authController.login.bind(authController));
  */
 router.get('/verify', authController.verifyToken.bind(authController));
 
-export default router;
+    return router;
+}

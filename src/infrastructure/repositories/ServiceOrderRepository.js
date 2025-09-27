@@ -153,8 +153,8 @@ export class ServiceOrderRepository extends IServiceOrderRepository {
     const result = await this.db.query(
       `UPDATE materials 
        SET ai_classification = $1, is_hazardous = $2, classification_code = $3, 
-           risk_level = $4, full_analysis = $5, updated_at = CURRENT_TIMESTAMP
-       WHERE id = $6 
+           risk_level = $4, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $5 
        RETURNING *`,
       [aiClassification, isHazardous, classificationCode, riskLevel, materialId]
     );

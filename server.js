@@ -21,7 +21,8 @@ async function startServer() {
     app.use(express.json());
 
     const serviceOrderController = container.get('serviceOrderController');
-    app.use('/', setupRoutes(serviceOrderController));
+    const authController = container.get('authController');
+    app.use('/', setupRoutes(serviceOrderController, authController));
 
     app.use((err, req, res, next) => {
       console.error(err.stack);
@@ -39,9 +40,13 @@ async function startServer() {
     await container.startConsumers();
     console.log('Message consumers started');
 
-    const classificationConsumer = new ClassificationConsumer();
-    await classificationConsumer.startConsuming();
-    console.log('Classification consumer started');
+    try {
+        const classificationConsumer = new ClassificationConsumer();
+        await classificationConsumer.startConsuming();
+        console.log('Classification consumer started');
+    } catch (error) {
+        console.log('⚠️ Classification consumer not available:', error.message);
+    }
 
     await container.startScheduler();
     console.log('Material analysis scheduler started');
@@ -61,5 +66,4 @@ async function startServer() {
   }
 }
 
-// Start the server
 startServer();

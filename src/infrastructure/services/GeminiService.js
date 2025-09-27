@@ -1,4 +1,4 @@
-import OpenAI from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { RiskLevel } from '../../domain/ServiceOrderAggregate/WasteItem.js';
 
 const HazardType = {
@@ -12,32 +12,27 @@ const HazardType = {
   ELECTRICAL_HAZARD: 'ELECTRICAL_HAZARD',
 };
 
-class OpenAIService { 
+class GeminiService { 
   constructor(apiKey) {
-    this.openai = new OpenAI({
-      apiKey,
-    });
+    this.genAI = new GoogleGenerativeAI(apiKey);
+    this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash-lite' });
   }
 
   async analyzeWasteItemRisk(itemName, description) {
     try {
       const prompt = this.buildRiskAnalysisPrompt(itemName, description);
 
-      const response = await this.openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.2,
-        max_tokens: 500,
-      });
+      const result = await this.model.generateContent(prompt);
+      const response = await result.response;
+      const content = response.text();
 
-      const content = response.choices[0].message.content;
       if (!content) {
-        throw new Error('No response from OpenAI');
+        throw new Error('No response from Gemini');
       }
 
-      const result = this.parseAndValidateResponse(content, itemName);
+      const parsedResult = this.parseAndValidateResponse(content, itemName);
 
-      return result;
+      return parsedResult;
     } catch (error) {
       console.error('Error in analyzeWasteItemRisk:', error);
       return this.getFallbackResult();
@@ -91,7 +86,7 @@ Examples:
       const result = JSON.parse(content);
 
       if (!result.riskLevel || !result.analysis || !result.hazardTypes || !result.confidence) {
-        throw new Error('Missing required fields in OpenAI response');
+        throw new Error('Missing required fields in Gemini response');
       }
 
       const validRiskLevels = [
@@ -117,7 +112,7 @@ Examples:
         confidence: result.confidence,
       };
     } catch (error) {
-      throw new Error('Invalid response format from OpenAI');
+      throw new Error('Invalid response format from Gemini');
     }
   }
 
@@ -148,5 +143,4 @@ Examples:
   }
 }
 
-export { OpenAIService, HazardType };
-
+export { GeminiService, HazardType };
