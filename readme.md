@@ -5,7 +5,7 @@ A comprehensive waste management system that uses AI and ML to classify hazardou
 ## Prerequisites
 
 - Docker and Docker Compose installed
-- Ports 3001, 5432, and 5672 available on your system
+- Ports 3000, 3001, 5432, and 5672 available on your system
 
 ## Quick Start
 
@@ -29,9 +29,10 @@ JWT_SECRET=your-super-secret-key-here
 docker-compose up -d
 ```
 
-### 3. Access the API
+### 3. Access the Application
 
-- **API Documentation:** http://localhost:3001/api-docs
+- **Frontend:** http://localhost:3000 (when implemented)
+- **API Documentation:** http://localhost:3001/swagger
 - **API Base URL:** http://localhost:3001
 
 ## Authentication
@@ -94,6 +95,7 @@ The system processes waste material requests through the following workflow:
 ## Architecture
 
 ### Technology Stack
+- **Frontend:** TBD (placeholder for future implementation)
 - **Backend:** Node.js with Express
 - **Database:** PostgreSQL
 - **Message Queue:** RabbitMQ
@@ -129,27 +131,83 @@ BatchProcessingService (Main Coordinator)
 
 ## Development
 
+### Monorepo Structure
+This project follows a monorepo structure with separate backend and frontend services:
+
+- **Backend Service:** Complete Node.js/Express API with all business logic
+- **Frontend Service:** Placeholder for future frontend implementation
+- **Shared Infrastructure:** Database, message queues, and orchestration via Docker Compose
+
+### Development Workflow
+
+#### Backend Development
+```bash
+# Navigate to backend directory
+cd backend
+
+# Install dependencies
+npm install
+
+# Run in development mode
+npm run dev
+
+# Run tests
+npm test
+```
+
+#### Frontend Development
+```bash
+# Navigate to frontend directory (when implemented)
+cd frontend
+
+# Install dependencies and start development server
+npm install && npm start
+```
+
+#### Full Stack Development
+```bash
+# Start all services with Docker Compose
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop all services
+docker-compose down
+```
+
 ### Project Structure
 ```
-src/
-├── api/                    # API controllers and routes
-│   ├── controllers/        # Request handlers
-│   ├── middleware/        # Authentication and validation
-│   └── routes/            # API endpoint definitions
-├── application/            # Command/Query handlers (CQRS)
-│   └── ServiceOrderAggregate/
-│       ├── Commands/      # Command handlers
-│       └── Queries/      # Query handlers
-├── domain/                # Business entities and logic
-│   ├── ClassificationAggregate/
-│   ├── ServiceOrderAggregate/
-│   └── UserAggregate/
-└── infrastructure/        # External integrations
-    ├── services/          # Business services
-    │   └── batch/        # Modular batch processing components
-    ├── repositories/      # Data access layer
-    ├── messageBroker/    # RabbitMQ integration
-    └── db/               # Database connection
+WasteManagementSystem/
+├── backend/                 # Backend API service
+│   ├── db/                 # Database initialization scripts
+│   ├── src/                # Backend source code
+│   │   ├── api/            # API controllers and routes
+│   │   │   ├── controllers/ # Request handlers
+│   │   │   ├── middleware/ # Authentication and validation
+│   │   │   └── routes/     # API endpoint definitions
+│   │   ├── application/    # Command/Query handlers (CQRS)
+│   │   │   └── ServiceOrderAggregate/
+│   │   │       ├── Commands/ # Command handlers
+│   │   │       └── Queries/ # Query handlers
+│   │   ├── domain/         # Business entities and logic
+│   │   │   ├── ClassificationAggregate/
+│   │   │   ├── ServiceOrderAggregate/
+│   │   │   └── UserAggregate/
+│   │   └── infrastructure/ # External integrations
+│   │       ├── services/   # Business services
+│   │       │   └── batch/  # Modular batch processing components
+│   │       ├── repositories/ # Data access layer
+│   │       ├── messageBroker/ # RabbitMQ integration
+│   │       └── db/        # Database connection
+│   ├── server.js          # Main server entry point
+│   ├── Dockerfile         # Backend container configuration
+│   └── package.json       # Backend dependencies
+├── frontend/              # Frontend application (placeholder)
+│   ├── src/              # Frontend source code
+│   └── Dockerfile        # Frontend container configuration
+├── docker-compose.yml    # Multi-service orchestration
+└── readme.md            # Project documentation
 ```
 
 ### Database Schema
@@ -221,7 +279,7 @@ These scripts automatically handle rate limiting, progress tracking, and error r
 ### Common Issues
 
 **Port Conflicts:**
-- Ensure ports 3001, 5432, and 5672 are available
+- Ensure ports 3000, 3001, 5432, and 5672 are available
 - Check if other services are using these ports
 
 **API Key Issues:**
