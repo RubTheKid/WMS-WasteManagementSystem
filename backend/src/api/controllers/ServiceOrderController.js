@@ -2,14 +2,16 @@ import { CreateServiceOrderCommand, CreateMaterialCommand } from '../../applicat
 import { GetAllServiceOrdersQuery } from '../../application/ServiceOrderAggregate/Queries/GetAllServiceOrders/GetAllServiceOrdersQuery.js';
 import { ClassifyHazardousCommand } from '../../application/ServiceOrderAggregate/Commands/ClassifyHazardous/ClassifyHazardousCommand.js';
 import { TriggerAnalysisCommand } from '../../application/ServiceOrderAggregate/Commands/TriggerAnalysis/TriggerAnalysisCommand.js';
+import { UpdateServiceOrderCommand } from '../../application/ServiceOrderAggregate/Commands/UpdateServiceOrder/UpdateServiceOrderCommand.js';
 
 export class ServiceOrderController {
-  constructor(createServiceOrderHandler, getAllServiceOrdersHandler, triggerAnalysisHandler, classifyHazardousHandler, batchProcessingHandler) {
+  constructor(createServiceOrderHandler, getAllServiceOrdersHandler, triggerAnalysisHandler, classifyHazardousHandler, batchProcessingHandler, updateServiceOrderHandler) {
     this.createServiceOrderHandler = createServiceOrderHandler;
     this.getAllServiceOrdersHandler = getAllServiceOrdersHandler;
     this.triggerAnalysisHandler = triggerAnalysisHandler;
     this.classifyHazardousHandler = classifyHazardousHandler;
     this.batchProcessingHandler = batchProcessingHandler;
+    this.updateServiceOrderHandler = updateServiceOrderHandler;
   }
 
 
@@ -56,6 +58,33 @@ export class ServiceOrderController {
       res.status(201).json(result);
     } catch (error) {
       console.error('Error creating service order:', error);
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  async updateServiceOrder(req, res) {
+    try {
+      const { id } = req.params;
+      const { customerName, companyName, appointmentDate, status, materials } = req.body;
+
+      const command = new UpdateServiceOrderCommand(
+        id,
+        customerName,
+        companyName,
+        appointmentDate,
+        status,
+        materials
+      );
+
+      const result = await this.updateServiceOrderHandler.handle(command);
+
+      if (result.success) {
+        res.status(200).json(result.serviceOrder);
+      } else {
+        res.status(400).json({ error: result.error });
+      }
+    } catch (error) {
+      console.error('Error updating service order:', error);
       res.status(400).json({ error: error.message });
     }
   }

@@ -48,6 +48,19 @@ export const serviceOrderApi = {
         return response.data;
     },
 
+    update: async (id: string, data: {
+        customerName: string;
+        companyName: string;
+        appointmentDate: string;
+        status?: string;
+        materials?: Array<{
+            id: string;
+            internalNotes?: string;
+        }>;
+    }): Promise<ServiceOrder> => {
+        const response: AxiosResponse<ServiceOrder> = await api.put(`/api/v1/service-orders/${id}`, data);
+        return response.data;
+    },
 };
 
 

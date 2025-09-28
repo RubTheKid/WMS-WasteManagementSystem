@@ -146,7 +146,6 @@ export class MLAnalysisService {
       measurements: (text.match(/\d+\s*(mg|g|kg|ml|l|ppm|ppb)/gi) || []).length,
       hazardSymbols: (text.match(/\b(flammable|toxic|corrosive|explosive|radioactive|biohazard)\b/gi) || []).length,
       safetyTerms: (text.match(/\b(msds|sds|safety|warning|caution|danger)\b/gi) || []).length,
-      // Enhanced patterns for better detection
       glowPatterns: (text.match(/\b(glow|glowing|phosphorescent|luminescent|fluorescent|bright|neon)\b/gi) || []).length,
       liquidPatterns: (text.match(/\b(drops|liquid|solution|concentrate|residue|fluid)\b/gi) || []).length,
       suspiciousPatterns: (text.match(/\b(unknown|mystery|suspicious|contaminated|colored|dyed|stained)\b/gi) || []).length,

@@ -47,6 +47,92 @@ export function createServiceOrderRoutes(serviceOrderController) {
 
     /**
      * @swagger
+     * /api/v1/service-orders/{id}:
+     *   put:
+     *     summary: Update a service order
+     *     description: Update service order details including appointment date, status, and material notes
+     *     tags: [Service Orders]
+     *     security:
+     *       - bearerAuth: []
+     *     parameters:
+     *       - in: path
+     *         name: id
+     *         required: true
+     *         schema:
+     *           type: string
+     *         description: Service order ID
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required:
+     *               - customerName
+     *               - companyName
+     *               - appointmentDate
+     *             properties:
+     *               customerName:
+     *                 type: string
+     *                 example: "John Doe"
+     *               companyName:
+     *                 type: string
+     *                 example: "Acme Corp"
+     *               appointmentDate:
+     *                 type: string
+     *                 format: date-time
+     *                 example: "2024-12-01T10:00:00Z"
+     *               status:
+     *                 type: string
+     *                 enum: [SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED]
+     *                 example: "SCHEDULED"
+     *               materials:
+     *                 type: array
+     *                 items:
+     *                   type: object
+     *                   properties:
+     *                     id:
+     *                       type: string
+     *                       example: "123"
+     *                     internalNotes:
+     *                       type: string
+     *                       example: "Additional notes about this material"
+     *     responses:
+     *       200:
+     *         description: Service order updated successfully
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/ServiceOrder'
+     *       400:
+     *         description: Bad request
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/ErrorResponse'
+     *       401:
+     *         description: Authentication required
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/ErrorResponse'
+     *       404:
+     *         description: Service order not found
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/ErrorResponse'
+     *       500:
+     *         description: Internal server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/ErrorResponse'
+     */
+    router.put('/:id', authMiddleware.requireEmployee, serviceOrderController.updateServiceOrder.bind(serviceOrderController));
+
+    /**
+     * @swagger
      * /api/v1/service-orders:
      *   get:
      *     summary: Get all service orders

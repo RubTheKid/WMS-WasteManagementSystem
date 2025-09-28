@@ -15,6 +15,7 @@ import { CreateServiceOrderHandler } from '../../application/ServiceOrderAggrega
 import { GetAllServiceOrdersHandler } from '../../application/ServiceOrderAggregate/Queries/GetAllServiceOrders/GetAllServiceOrdersHandler.js';
 import { ClassifyHazardousHandler } from '../../application/ServiceOrderAggregate/Commands/ClassifyHazardous/ClassifyHazardousHandler.js';
 import { TriggerAnalysisHandler } from '../../application/ServiceOrderAggregate/Commands/TriggerAnalysis/TriggerAnalysisHandler.js';
+import { UpdateServiceOrderHandler } from '../../application/ServiceOrderAggregate/Commands/UpdateServiceOrder/UpdateServiceOrderHandler.js';
 import { LoginHandler } from '../../application/UserAggregate/Commands/Login/LoginHandler.js';
 import { VerifyTokenHandler } from '../../application/UserAggregate/Commands/VerifyToken/VerifyTokenHandler.js';
 
@@ -93,6 +94,11 @@ export class Container {
         );
         this.services.set('getAllServiceOrdersHandler', getAllServiceOrdersHandler);
 
+        const updateServiceOrderHandler = new UpdateServiceOrderHandler(
+            this.services.get('serviceOrderRepository')
+        );
+        this.services.set('updateServiceOrderHandler', updateServiceOrderHandler);
+
         // Scheduler
         const materialAnalysisScheduler = new MaterialAnalysisScheduler(
             this.services.get('serviceOrderRepository'),
@@ -106,7 +112,8 @@ export class Container {
             this.services.get('getAllServiceOrdersHandler'),
             this.services.get('triggerAnalysisHandler'),
             this.services.get('classifyHazardousHandler'),
-            this.services.get('processBatchHandler')
+            this.services.get('processBatchHandler'),
+            this.services.get('updateServiceOrderHandler')
         );
         this.services.set('serviceOrderController', serviceOrderController);
 

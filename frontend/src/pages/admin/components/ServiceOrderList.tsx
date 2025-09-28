@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { ServiceOrder, Material } from '../../../types';
 import { serviceOrderApi } from '../../../services/api';
 import { formatDate, getHazardBadgeClass, getClassificationBadgeClass, getStatusBadgeClass } from '../../../utils/helpers';
+import { EditServiceOrderModal } from '../../../components/modals/EditServiceOrderModal';
 
 interface ServiceOrderListProps {
     onRefresh?: () => void;
@@ -12,6 +13,8 @@ export const ServiceOrderList: React.FC<ServiceOrderListProps> = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
+    const [editingOrder, setEditingOrder] = useState<ServiceOrder | null>(null);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
     const fetchServiceOrders = async () => {
         try {
@@ -41,6 +44,20 @@ export const ServiceOrderList: React.FC<ServiceOrderListProps> = () => {
 
     const toggleOrderExpansion = (orderId: string) => {
         setExpandedOrder(expandedOrder === orderId ? null : orderId);
+    };
+
+    const handleEditOrder = (order: ServiceOrder) => {
+        setEditingOrder(order);
+        setIsEditModalOpen(true);
+    };
+
+    const handleCloseEditModal = () => {
+        setIsEditModalOpen(false);
+        setEditingOrder(null);
+    };
+
+    const handleEditSuccess = () => {
+        fetchServiceOrders(); // Refresh the list
     };
 
     if (loading) {
@@ -86,10 +103,18 @@ export const ServiceOrderList: React.FC<ServiceOrderListProps> = () => {
                             order={order}
                             expanded={expandedOrder === order.id}
                             onToggleExpand={() => toggleOrderExpansion(order.id)}
+                            onEdit={() => handleEditOrder(order)}
                         />
                     ))}
                 </div>
             )}
+            
+            <EditServiceOrderModal
+                isOpen={isEditModalOpen}
+                onClose={handleCloseEditModal}
+                serviceOrder={editingOrder}
+                onSuccess={handleEditSuccess}
+            />
         </div>
     );
 };
@@ -98,17 +123,18 @@ interface ServiceOrderCardProps {
     order: ServiceOrder;
     expanded: boolean;
     onToggleExpand: () => void;
+    onEdit: () => void;
 }
 
-const ServiceOrderCard: React.FC<ServiceOrderCardProps> = ({ order, expanded, onToggleExpand }) => {
+const ServiceOrderCard: React.FC<ServiceOrderCardProps> = ({ order, expanded, onToggleExpand, onEdit }) => {
     const materialsCount = order.materials.length;
     const analyzedMaterials = order.materials.filter(m => m.aiClassification).length;
     const hazardousMaterials = order.materials.filter(m => m.isHazardous).length;
 
     return (
         <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow duration-200">
-            <div className="flex justify-between items-start cursor-pointer" onClick={onToggleExpand}>
-                <div className="flex-1">
+            <div className="flex justify-between items-start">
+                <div className="flex-1 cursor-pointer" onClick={onToggleExpand}>
                     <div className="flex items-center space-x-3 mb-2">
                         <h3 className="text-lg font-semibold text-gray-900">{order.companyName}</h3>
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadgeClass(order.status)}`}>
@@ -128,16 +154,27 @@ const ServiceOrderCard: React.FC<ServiceOrderCardProps> = ({ order, expanded, on
                     </div>
                 </div>
 
-                <button className="text-gray-400 hover:text-gray-600 p-2">
-                    <svg
-                        className={`w-5 h-5 transform transition-transform ${expanded ? 'rotate-180' : ''}`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                <div className="flex items-center space-x-2">
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onEdit();
+                        }}
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-3 rounded-lg transition-colors duration-200 text-sm"
                     >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                </button>
+                        ✏️ Edit
+                    </button>
+                    <button className="text-gray-400 hover:text-gray-600 p-2" onClick={onToggleExpand}>
+                        <svg
+                            className={`w-5 h-5 transform transition-transform ${expanded ? 'rotate-180' : ''}`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                </div>
             </div>
 
             {expanded && (

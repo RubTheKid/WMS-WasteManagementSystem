@@ -128,18 +128,15 @@ export class ServiceOrderRepository extends IServiceOrderRepository {
   async update(serviceOrder) {
     const result = await this.db.query(
       `UPDATE service_orders 
-       SET customer_name = $1, customer_email = $2, customer_phone = $3, 
-           address = $4, description = $5, status = $6, total_risk = $7, updated_at = $8
-       WHERE id = $9 
+       SET customer_name = $1, company_name = $2, appointment_date = $3, 
+           status = $4, updated_at = $5
+       WHERE id = $6 
        RETURNING *`,
       [
         serviceOrder.customerName,
-        serviceOrder.customerEmail,
-        serviceOrder.customerPhone,
-        serviceOrder.address,
-        serviceOrder.description,
+        serviceOrder.companyName,
+        serviceOrder.appointmentDate,
         serviceOrder.status,
-        serviceOrder.totalRisk,
         serviceOrder.updatedAt,
         parseInt(serviceOrder.id, 10),
       ]
@@ -164,6 +161,22 @@ export class ServiceOrderRepository extends IServiceOrderRepository {
        WHERE id = $5 
        RETURNING *`,
       [aiClassification, isHazardous, classificationCode, riskLevel, materialId]
+    );
+
+    if (result.rows.length === 0) {
+      throw new Error(`Material with id ${materialId} not found`);
+    }
+
+    return this.mapRowToMaterial(result.rows[0]);
+  }
+
+  async updateMaterialNotes(materialId, internalNotes) {
+    const result = await this.db.query(
+      `UPDATE materials 
+       SET internal_notes = $1, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $2 
+       RETURNING *`,
+      [internalNotes, materialId]
     );
 
     if (result.rows.length === 0) {

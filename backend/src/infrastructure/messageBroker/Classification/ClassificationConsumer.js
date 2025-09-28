@@ -184,17 +184,15 @@ export class ClassificationConsumer {
 
             console.log(`📊 Found ${totalRecords} unclassified service orders for backfill`);
 
-            // Process in batches
+            //process in batches
             for (let i = 0; i < unclassifiedOrders.length; i += batchSize) {
                 const batch = unclassifiedOrders.slice(i, i + batchSize);
 
-                // Process batch
                 const batchResults = await this.processBatch(batch);
                 successCount += batchResults.success;
                 errorCount += batchResults.errors;
                 processedCount += batch.length;
 
-                // Publish progress update
                 await this.publishResult({
                     taskId: task.id,
                     correlationId: task.correlationId,
@@ -215,7 +213,6 @@ export class ClassificationConsumer {
                 }
             }
 
-            // Publish final result
             await this.publishResult({
                 taskId: task.id,
                 correlationId: task.correlationId,
@@ -251,10 +248,8 @@ export class ClassificationConsumer {
 
         for (const serviceOrder of serviceOrders) {
             try {
-                // Get materials for this service order
                 const materials = await this.materialRepository.getByServiceOrderId(serviceOrder.id);
 
-                // Create booking object for classification
                 const booking = {
                     description: serviceOrder.description || '',
                     product: serviceOrder.product || 'OTHER',
