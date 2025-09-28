@@ -145,7 +145,12 @@ export class MLAnalysisService {
       temperatures: (text.match(/\d+°[CF]/g) || []).length,
       measurements: (text.match(/\d+\s*(mg|g|kg|ml|l|ppm|ppb)/gi) || []).length,
       hazardSymbols: (text.match(/\b(flammable|toxic|corrosive|explosive|radioactive|biohazard)\b/gi) || []).length,
-      safetyTerms: (text.match(/\b(msds|sds|safety|warning|caution|danger)\b/gi) || []).length
+      safetyTerms: (text.match(/\b(msds|sds|safety|warning|caution|danger)\b/gi) || []).length,
+      // Enhanced patterns for better detection
+      glowPatterns: (text.match(/\b(glow|glowing|phosphorescent|luminescent|fluorescent|bright|neon)\b/gi) || []).length,
+      liquidPatterns: (text.match(/\b(drops|liquid|solution|concentrate|residue|fluid)\b/gi) || []).length,
+      suspiciousPatterns: (text.match(/\b(unknown|mystery|suspicious|contaminated|colored|dyed|stained)\b/gi) || []).length,
+      radioactivePatterns: (text.match(/\b(radioactive|radiation|nuclear|atomic|isotope|uranium|plutonium|cesium|radium)\b/gi) || []).length
     };
     
     return patterns;
@@ -189,6 +194,16 @@ export class MLAnalysisService {
     }, 0) / keywords.length;
   }
 
+  calculateContextWeight(features) {
+    const context = features.context;
+    const hazardousContexts = context.industrial + context.laboratory + context.medical;
+    const totalContexts = Object.values(context).reduce((sum, score) => sum + score, 0);
+    
+    if (totalContexts === 0) return 0.3;
+    
+    return Math.min(1.0, (hazardousContexts / totalContexts) * 1.2);
+  }
+
   applyMLModel(features) {
     const keywordScore = this.calculateKeywordScore(features);
     const patternScore = this.calculatePatternScore(features);
@@ -201,7 +216,11 @@ export class MLAnalysisService {
       statisticalScore * this.modelWeights.statisticalAnalysis +
       contextScore * this.modelWeights.contextAnalysis;
     
-    return Math.min(1.0, Math.max(0.0, weightedScore));
+    // Apply special rules for highly suspicious combinations
+    const suspiciousScore = this.calculateSuspiciousCombinationScore(features);
+    const finalScore = Math.max(weightedScore, suspiciousScore);
+    
+    return Math.min(1.0, Math.max(0.0, finalScore));
   }
 
   calculateKeywordScore(features) {
@@ -217,9 +236,16 @@ export class MLAnalysisService {
     const totalPatterns = Object.values(patterns).reduce((sum, count) => sum + count, 0);
     const hazardousPatterns = patterns.chemicalFormulas + patterns.hazardSymbols + patterns.safetyTerms;
     
+    const enhancedHazardousPatterns = 
+      patterns.glowPatterns * 2.0 +      
+      patterns.liquidPatterns * 1.5 +     
+      patterns.suspiciousPatterns * 1.8 + 
+      patterns.radioactivePatterns * 3.0 +
+      hazardousPatterns;                  
+    
     if (totalPatterns === 0) return 0.3;
     
-    const hazardousRatio = hazardousPatterns / totalPatterns;
+    const hazardousRatio = enhancedHazardousPatterns / Math.max(totalPatterns, 1);
     return Math.min(1.0, hazardousRatio * 1.5);
   }
 
@@ -235,14 +261,32 @@ export class MLAnalysisService {
     return Math.min(1.0, score);
   }
 
-  calculateContextWeight(features) {
-    const context = features.context;
-    const hazardousContexts = context.industrial + context.laboratory + context.medical;
-    const totalContexts = Object.values(context).reduce((sum, score) => sum + score, 0);
+  calculateSuspiciousCombinationScore(features) {
+    const patterns = features.patterns;
+    let suspiciousScore = 0;
     
-    if (totalContexts === 0) return 0.3;
+    if (patterns.glowPatterns > 0 && patterns.liquidPatterns > 0) {
+      suspiciousScore = Math.max(suspiciousScore, 0.9);
+    }
     
-    return Math.min(1.0, (hazardousContexts / totalContexts) * 1.2);
+    if (patterns.glowPatterns > 0 && patterns.suspiciousPatterns > 0) {
+      suspiciousScore = Math.max(suspiciousScore, 0.85);
+    }
+    
+    if (patterns.liquidPatterns > 0 && patterns.suspiciousPatterns > 0) {
+      suspiciousScore = Math.max(suspiciousScore, 0.8);
+    }
+    
+    if (patterns.radioactivePatterns > 0) {
+      suspiciousScore = Math.max(suspiciousScore, 0.95);
+    }
+    
+    const suspiciousIndicators = patterns.glowPatterns + patterns.suspiciousPatterns + patterns.liquidPatterns;
+    if (suspiciousIndicators >= 2) {
+      suspiciousScore = Math.max(suspiciousScore, 0.7 + (suspiciousIndicators - 2) * 0.1);
+    }
+    
+    return Math.min(1.0, suspiciousScore);
   }
 
   aggregateScores(scores) {
@@ -267,6 +311,9 @@ export class MLAnalysisService {
     
     // Confidence boosting strategies
     confidence = this.applyConfidenceBoosts(confidence, finalScore, individualScores);
+    
+    // Reduce confidence for suspicious patterns to trigger AI analysis
+    confidence = this.applySuspiciousPatternConfidenceReduction(confidence, finalScore);
     
     return Math.min(0.99, Math.max(0.1, confidence));
   }
@@ -312,10 +359,22 @@ export class MLAnalysisService {
     return boostedConfidence;
   }
 
+  applySuspiciousPatternConfidenceReduction(confidence, finalScore) {
+    if (finalScore >= 0.7 && finalScore < 0.95) {
+      return Math.min(confidence, 0.6);
+    }
+   
+    if (finalScore >= 0.95) {
+      return confidence;
+    }
+    
+    return confidence;
+  }
+
   getClassificationCode(isHazardous, features) {
     if (!isHazardous) return 'NON-HAZARDOUS';
     
-    // Determine specific hazard type based on features
+   
     const patterns = features.patterns;
     
     if (patterns.chemicalFormulas > 0 || patterns.hazardSymbols > 0) {

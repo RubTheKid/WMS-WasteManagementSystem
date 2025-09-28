@@ -29,6 +29,9 @@ export class ClassificationTrainingData {
       'cesium', 'cesium-137', 'uranium', 'plutonium', 'radium', 'radon',
       'cobalt-60', 'strontium-90', 'iodine-131', 'technetium-99',
       'americium', 'thorium', 'tritium', 'carbon-14',
+      'glow', 'glowing', 'phosphorescent', 'luminescent', 'fluorescent',
+      'radioactive', 'radiation', 'isotope', 'nuclear', 'atomic',
+      'uranium-235', 'uranium-238', 'plutonium-239', 'iodine-129', 'technetium-98',
 
       // Industrial materials
       'asbestos', 'pcb', 'polychlorinated biphenyl', 'dioxin',
@@ -48,6 +51,9 @@ export class ClassificationTrainingData {
       'toxic', 'poisonous', 'carcinogenic', 'mutagenic',
       'teratogenic', 'reactive', 'oxidizer', 'peroxide',
       'spontaneously combustible', 'water reactive',
+      'drops', 'liquid', 'solution', 'concentrate', 'residue',
+      'contaminated', 'unknown', 'mystery', 'suspicious',
+      'bright', 'neon', 'colored', 'dyed', 'stained',
 
       // Additional chemicals
       'phenol', 'toluene-diisocyanate', 'formalin', 'hydrazine', 'acetaldehyde',
