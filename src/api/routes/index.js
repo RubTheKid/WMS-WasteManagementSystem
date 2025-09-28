@@ -6,7 +6,7 @@ import { specs, swaggerUi } from '../../infrastructure/Config/swagger.js';
 export function setupRoutes(serviceOrderController, authController) {
     const router = express.Router();
 
-    router.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
+    router.use('/swagger', swaggerUi.serve, swaggerUi.setup(specs, {
         explorer: true,
         customCss: '.swagger-ui .topbar { display: none }',
         customSiteTitle: 'WMS API Documentation'
