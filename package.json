@@ -14,7 +14,11 @@
     "db:setup": "ts-node src/database/setup.ts",
     "db:seed": "ts-node src/database/seed.ts",
     "db:migrate": "node run-migration.js",
-    "test:login": "node test-login.js"
+    "test:login": "node test-login.js",
+    "backfill": "node scripts/backfill-service-orders.js",
+    "backfill:small": "node scripts/backfill-service-orders.js 1000",
+    "backfill:medium": "node scripts/backfill-service-orders.js 10000",
+    "backfill:large": "node scripts/backfill-service-orders.js 100000"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -27,6 +31,7 @@
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "natural": "^8.1.0",
+    "node-fetch": "^3.3.2",
     "pg": "^8.11.3",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",

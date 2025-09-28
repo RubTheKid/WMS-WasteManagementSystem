@@ -25,6 +25,11 @@ export class ClassificationTrainingData {
       'medical waste', 'biohazard', 'infectious', 'pathogen',
       'chemotherapy', 'radioactive', 'isotope',
 
+      // Radioactive materials
+      'cesium', 'cesium-137', 'uranium', 'plutonium', 'radium', 'radon',
+      'cobalt-60', 'strontium-90', 'iodine-131', 'technetium-99',
+      'americium', 'thorium', 'tritium', 'carbon-14',
+
       // Industrial materials
       'asbestos', 'pcb', 'polychlorinated biphenyl', 'dioxin',
       'fiberglass', 'insulation', 'refractory', 'catalyst',
@@ -42,7 +47,32 @@ export class ClassificationTrainingData {
       'flammable', 'combustible', 'explosive', 'corrosive',
       'toxic', 'poisonous', 'carcinogenic', 'mutagenic',
       'teratogenic', 'reactive', 'oxidizer', 'peroxide',
-      'spontaneously combustible', 'water reactive'
+      'spontaneously combustible', 'water reactive',
+
+      // Additional chemicals
+      'phenol', 'toluene-diisocyanate', 'formalin', 'hydrazine', 'acetaldehyde',
+      'perchlorate', 'nitroglycerin', 'cyanide', 'sulfur dioxide', 'hydrogen peroxide',
+
+      // Batteries and electronics
+      'smartphone battery', 'tablet battery', 'camera battery', 'laptop battery',
+      'capacitor electrolyte', 'pcb board', 'microchip', 'led lamp', 'uv lamp',
+
+      // Oils, fuels, lubricants
+      'engine oil', 'gear oil', 'grease', 'heating oil', 'biofuel', 'motor lubricant',
+
+      // Medical & pharma
+      'vaccine', 'blood bag', 'lab sample', 'pathogenic culture', 'sharps container',
+      'antibiotic', 'insulin', 'cytotoxic drug',
+
+      // Radioactive
+      'uranium-235', 'uranium-238', 'plutonium-239', 'iodine-129', 'technetium-98',
+
+      // Industrial & construction
+      'fire extinguisher', 'solvent-based adhesive', 'chemical drum', 'resin batch',
+      'epoxy glue', 'paint thinner', 'oil-based paint', 'glue residue', 'contaminated sand',
+
+      // Hazard characteristics
+      'explosive powder', 'combustible dust', 'reactive solid', 'water reactive powder'
     ];
   }
 
@@ -83,7 +113,39 @@ export class ClassificationTrainingData {
       // General non-hazardous
       'clean', 'uncontaminated', 'recyclable', 'reusable',
       'household', 'office', 'commercial', 'industrial',
-      'non-toxic', 'safe', 'inert', 'stable'
+      'non-toxic', 'safe', 'inert', 'stable',
+      
+      // Paper / Cardboard
+      'catalog', 'leaflet', 'postcard', 'receipt', 'paperboard',
+
+      // Organic / Food
+      'coffee grounds', 'tea leaves', 'egg shells', 'fruit peel', 'vegetable peel',
+      'grass clippings', 'fallen leaves', 'compost bag', 'garden trimmings',
+
+      // Plastics
+      'yogurt cup', 'milk carton', 'plastic wrapper', 'plastic tray', 'PET bottle cap',
+      'plastic straw', 'plastic packaging film', 'clean food container',
+
+      // Metals
+      'aluminum foil', 'tin can', 'copper wire', 'steel pipe', 'iron scrap',
+      'brass fitting', 'zinc sheet', 'clean metal sheet', 'unpainted scrap',
+
+      // Glass
+      'glass jar lid', 'wine bottle', 'beer bottle', 'glass panel', 'mirror shard',
+      'window frame', 'ceramic tile', 'porcelain cup', 'clean glass bottle',
+
+      // Textiles
+      'old t-shirt', 'jeans', 'socks', 'wool sweater', 'cotton towel',
+      'linen sheet', 'denim jacket', 'clean fabric scrap', 'textile offcut',
+
+      // Construction / Wood
+      'plywood', 'timber', 'wooden beam', 'drywall', 'flooring scrap',
+      'clean brick', 'gravel pile', 'sand bag', 'stone slab',
+
+      // Household / Misc
+      'plastic toy', 'plastic container', 'empty box', 'cardboard packaging',
+      'office paper', 'printer paper', 'magazine stack', 'clean packaging',
+      'household item', 'reusable container', 'inert material', 'non-toxic material'
     ];
   }
 }

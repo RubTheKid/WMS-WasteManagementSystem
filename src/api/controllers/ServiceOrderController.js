@@ -4,11 +4,12 @@ import { ClassifyHazardousCommand } from '../../application/ServiceOrderAggregat
 import { TriggerAnalysisCommand } from '../../application/ServiceOrderAggregate/Commands/TriggerAnalysis/TriggerAnalysisCommand.js';
 
 export class ServiceOrderController {
-  constructor(createServiceOrderHandler, getAllServiceOrdersHandler, triggerAnalysisHandler, classifyHazardousHandler) {
+  constructor(createServiceOrderHandler, getAllServiceOrdersHandler, triggerAnalysisHandler, classifyHazardousHandler, batchProcessingHandler) {
     this.createServiceOrderHandler = createServiceOrderHandler;
     this.getAllServiceOrdersHandler = getAllServiceOrdersHandler;
     this.triggerAnalysisHandler = triggerAnalysisHandler;
     this.classifyHazardousHandler = classifyHazardousHandler;
+    this.batchProcessingHandler = batchProcessingHandler;
   }
 
 
@@ -89,6 +90,101 @@ export class ServiceOrderController {
       }
       
       res.status(500).json({ error: error.message });
+    }
+  }
+
+  async processBatch(req, res) {
+    try {
+      const { serviceOrders } = req.body;
+
+      if (!serviceOrders || !Array.isArray(serviceOrders)) {
+        return res.status(400).json({
+          error: 'Invalid request: serviceOrders array is required'
+        });
+      }
+
+      if (serviceOrders.length === 0) {
+        return res.status(400).json({
+          error: 'Invalid request: serviceOrders array cannot be empty'
+        });
+      }
+
+      if (serviceOrders.length > 50000) {
+        return res.status(400).json({
+          error: 'Invalid request: maximum 50,000 service orders per batch'
+        });
+      }
+      const requestId = `batch_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+      const result = await this.batchProcessingHandler.handle({
+        serviceOrders,
+        requestId,
+        timestamp: new Date().toISOString()
+      });
+
+      res.status(202).json({
+        requestId: result.requestId,
+        status: 'ACCEPTED',
+        message: 'Batch accepted for processing',
+        totalServiceOrders: serviceOrders.length,
+        estimatedProcessingTime: `${Math.ceil(serviceOrders.length / 10)} seconds`,
+        statusUrl: `/api/v1/service-orders/batch/status/${result.requestId}`,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error in BatchProcessingController:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        message: process.env.NODE_ENV === 'production' 
+          ? 'Something went wrong!' 
+          : error.message
+      });
+    }
+  }
+
+  async getProcessingStatus(req, res) {
+    try {
+      const { requestId } = req.params;
+
+      if (!requestId) {
+        return res.status(400).json({
+          error: 'Invalid request: requestId is required'
+        });
+      }
+
+      const status = await this.batchProcessingHandler.getStatus(requestId);
+
+      if (!status) {
+        return res.status(404).json({
+          error: 'Processing request not found',
+          message: `No batch processing request found with ID: ${requestId}`
+        });
+      }
+
+      res.status(200).json(status);
+    } catch (error) {
+      console.error('Error getting processing status:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        message: process.env.NODE_ENV === 'production' 
+          ? 'Something went wrong!' 
+          : error.message
+      });
+    }
+  }
+
+  async getProcessingMetrics(req, res) {
+    try {
+      const metrics = await this.batchProcessingHandler.getMetrics();
+      res.status(200).json(metrics);
+    } catch (error) {
+      console.error('Error getting processing metrics:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        message: process.env.NODE_ENV === 'production' 
+          ? 'Something went wrong!' 
+          : error.message
+      });
     }
   }
 

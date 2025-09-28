@@ -10,7 +10,6 @@ export class Material {
       riskLevel = null
     ) {
       this.validateDescription(description);
-      //this.validateProduct(product);
   
       this.id = id;
       this.description = description;

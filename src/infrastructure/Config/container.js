@@ -1,11 +1,15 @@
 import { ServiceOrderRepository } from '../repositories/ServiceOrderRepository.js';
 import { UserRepository } from '../repositories/UserRepository.js';
+import { BatchRequestRepository } from '../repositories/BatchRequestRepository.js';
 
 import { MaterialAnalysisService } from '../services/MaterialAnalysisService.js';
-import { HazardousClassificationService } from '../services/HazardousClassificationService.js';
+import { MLAnalysisService } from '../services/MLAnalysisService.js';
+import { BatchProcessingService } from '../services/BatchProcessingService.js';
 
 import { MaterialAnalysisPublisher } from '../messageBroker/MaterialAnalysis/MaterialAnalysisPublisher.js';
 import { MaterialAnalysisConsumer } from '../messageBroker/MaterialAnalysis/MaterialAnalysisConsumer.js';
+import { BatchProcessingPublisher } from '../messageBroker/BatchProcessing/BatchProcessingPublisher.js';
+import { BatchProcessingConsumer } from '../messageBroker/BatchProcessing/BatchProcessingConsumer.js';
 
 import { CreateServiceOrderHandler } from '../../application/ServiceOrderAggregate/Commands/CreateServiceOrder/CreateServiceOrderHandler.js';
 import { GetAllServiceOrdersHandler } from '../../application/ServiceOrderAggregate/Queries/GetAllServiceOrders/GetAllServiceOrdersHandler.js';
@@ -13,6 +17,8 @@ import { ClassifyHazardousHandler } from '../../application/ServiceOrderAggregat
 import { TriggerAnalysisHandler } from '../../application/ServiceOrderAggregate/Commands/TriggerAnalysis/TriggerAnalysisHandler.js';
 import { LoginHandler } from '../../application/UserAggregate/Commands/Login/LoginHandler.js';
 import { VerifyTokenHandler } from '../../application/UserAggregate/Commands/VerifyToken/VerifyTokenHandler.js';
+
+import { ProcessBatchHandler } from '../../application/ServiceOrderAggregate/Commands/ProcessBatch/ProcessBatchHandler.js';
 
 import { MaterialAnalysisScheduler } from '../messageBroker/MaterialAnalysis/MaterialAnalysisScheduler.js';
 
@@ -28,16 +34,23 @@ export class Container {
         // Repositories
         this.services.set('serviceOrderRepository', new ServiceOrderRepository());
         this.services.set('userRepository', new UserRepository());
+        this.services.set('batchRequestRepository', new BatchRequestRepository());
 
         // Services
         this.services.set('materialAnalysisService', new MaterialAnalysisService());
-        this.services.set('hazardousClassificationService', new HazardousClassificationService());
+        this.services.set('mlAnalysisService', new MLAnalysisService());
+        this.services.set('batchProcessingService', new BatchProcessingService(
+            this.services.get('serviceOrderRepository'),
+            this.services.get('materialAnalysisService')
+        ));
 
-        // Message Broker
+        // broker
         const materialAnalysisPublisher = new MaterialAnalysisPublisher();
         this.services.set('materialAnalysisPublisher', materialAnalysisPublisher);
+        
+        const batchProcessingPublisher = new BatchProcessingPublisher();
+        this.services.set('batchProcessingPublisher', batchProcessingPublisher);
 
-        // Command Handlers
         const createServiceOrderHandler = new CreateServiceOrderHandler(
             this.services.get('serviceOrderRepository'),
             this.services.get('materialAnalysisPublisher')
@@ -46,7 +59,8 @@ export class Container {
 
         const classifyHazardousHandler = new ClassifyHazardousHandler(
             this.services.get('serviceOrderRepository'),
-            this.services.get('hazardousClassificationService')
+            this.services.get('mlAnalysisService'),
+            this.services.get('materialAnalysisService')
         );
         this.services.set('classifyHazardousHandler', classifyHazardousHandler);
 
@@ -68,7 +82,12 @@ export class Container {
         );
         this.services.set('verifyTokenHandler', verifyTokenHandler);
 
-        // Query Handlers
+        const processBatchHandler = new ProcessBatchHandler(
+            this.services.get('batchRequestRepository'),
+            this.services.get('batchProcessingPublisher')
+        );
+        this.services.set('processBatchHandler', processBatchHandler);
+
         const getAllServiceOrdersHandler = new GetAllServiceOrdersHandler(
             this.services.get('serviceOrderRepository')
         );
@@ -86,7 +105,8 @@ export class Container {
             this.services.get('createServiceOrderHandler'),
             this.services.get('getAllServiceOrdersHandler'),
             this.services.get('triggerAnalysisHandler'),
-            this.services.get('classifyHazardousHandler')
+            this.services.get('classifyHazardousHandler'),
+            this.services.get('processBatchHandler')
         );
         this.services.set('serviceOrderController', serviceOrderController);
 
@@ -96,17 +116,28 @@ export class Container {
         );
         this.services.set('authController', authController);
 
+
         // Consumer
         const materialAnalysisConsumer = new MaterialAnalysisConsumer(
             this.services.get('materialAnalysisService'),
             this.services.get('serviceOrderRepository')
         );
         this.services.set('materialAnalysisConsumer', materialAnalysisConsumer);
+        
+        const batchProcessingConsumer = new BatchProcessingConsumer(
+            this.services.get('serviceOrderRepository'),
+            this.services.get('materialAnalysisService'),
+            this.services.get('batchRequestRepository')
+        );
+        this.services.set('batchProcessingConsumer', batchProcessingConsumer);
     }
 
     async startConsumers() {
-        const consumer = this.services.get('materialAnalysisConsumer');
-        await consumer.start();
+        const materialAnalysisConsumer = this.services.get('materialAnalysisConsumer');
+        await materialAnalysisConsumer.start();
+        
+        const batchProcessingConsumer = this.services.get('batchProcessingConsumer');
+        await batchProcessingConsumer.start();
     }
 
     async startScheduler() {

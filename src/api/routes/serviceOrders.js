@@ -5,6 +5,7 @@ export function createServiceOrderRoutes(serviceOrderController) {
     const router = express.Router();
     const authMiddleware = new AuthMiddleware();
 
+
     /**
      * @swagger
      * /api/v1/service-orders:
@@ -89,29 +90,134 @@ export function createServiceOrderRoutes(serviceOrderController) {
     router.get('/', authMiddleware.requireEmployee, serviceOrderController.getAllServiceOrders.bind(serviceOrderController));
 
 
+
     /**
      * @swagger
-     * /api/v1/service-orders/analyze:
+     * /api/v1/service-orders/batch/process:
      *   post:
-     *     summary: Trigger material analysis
-     *     description: Manually trigger AI analysis of unanalyzed materials
-     *     tags: [Service Orders]
+     *     summary: Process batch of service orders
+     *     description: Process multiple service orders with ML-first analysis and rate limiting
+     *     tags: [Batch Processing]
      *     security:
      *       - bearerAuth: []
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *             required:
+     *               - serviceOrders
+     *             properties:
+     *               serviceOrders:
+     *                 type: array
+     *                 maxItems: 10000
+     *                 items:
+     *                   type: object
+     *                   required:
+     *                     - customerName
+     *                     - companyName
+     *                     - appointmentDate
+     *                     - materials
+     *                   properties:
+     *                     customerName:
+     *                       type: string
+     *                       example: "John Doe"
+     *                     companyName:
+     *                       type: string
+     *                       example: "Acme Corp"
+     *                     appointmentDate:
+     *                       type: string
+     *                       format: date-time
+     *                       example: "2024-12-01T10:00:00Z"
+     *                     materials:
+     *                       type: array
+     *                       minItems: 1
+     *                       items:
+     *                         type: object
+     *                         required:
+     *                           - product
+     *                           - description
+     *                         properties:
+     *                           product:
+     *                             type: string
+     *                             example: "BATTERIES"
+     *                           description:
+     *                             type: string
+     *                             example: "Old laptop batteries"
      *     responses:
      *       200:
-     *         description: Analysis triggered successfully
+     *         description: Batch processing completed successfully
      *         content:
      *           application/json:
      *             schema:
      *               type: object
      *               properties:
-     *                 message:
+     *                 requestId:
      *                   type: string
-     *                   example: Material analysis process triggered successfully
-     *                 timestamp:
+     *                   example: "batch_1640995200000"
+     *                 status:
      *                   type: string
-     *                   format: date-time
+     *                   enum: [COMPLETED, IN_PROGRESS, FAILED]
+     *                 progress:
+     *                   type: object
+     *                   properties:
+     *                     totalServiceOrders:
+     *                       type: integer
+     *                       example: 100
+     *                     processedCount:
+     *                       type: integer
+     *                       example: 100
+     *                     percentage:
+     *                       type: integer
+     *                       example: 100
+     *                 results:
+     *                   type: array
+     *                   items:
+     *                     type: object
+     *                     properties:
+     *                       serviceOrderId:
+     *                         type: string
+     *                       status:
+     *                         type: string
+     *                         enum: [SUCCESS, ERROR]
+     *                       materialsAnalyzed:
+     *                         type: integer
+     *                       cost:
+     *                         type: number
+     *                       mlAnalyzed:
+     *                         type: integer
+     *                       aiAnalyzed:
+     *                         type: integer
+     *                 metrics:
+     *                   type: object
+     *                   properties:
+     *                     processingTime:
+     *                       type: integer
+     *                       description: Processing time in milliseconds
+     *                     successRate:
+     *                       type: integer
+     *                       description: Success rate percentage
+     *                     costMetrics:
+     *                       type: object
+     *                       properties:
+     *                         totalCost:
+     *                           type: number
+     *                         costSavings:
+     *                           type: string
+     *                     performanceMetrics:
+     *                       type: object
+     *                       properties:
+     *                         serviceOrdersPerSecond:
+     *                           type: number
+     *                         apiCallsPerSecond:
+     *                           type: number
+     *       400:
+     *         description: Invalid request data
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/ErrorResponse'
      *       401:
      *         description: Authentication required
      *         content:
@@ -131,87 +237,62 @@ export function createServiceOrderRoutes(serviceOrderController) {
      *             schema:
      *               $ref: '#/components/schemas/ErrorResponse'
      */
-    router.post('/analyze', authMiddleware.requireEmployee, serviceOrderController.triggerAnalysis.bind(serviceOrderController));
+    router.post('/batch', authMiddleware.authenticate, authMiddleware.requireAdmin, serviceOrderController.processBatch.bind(serviceOrderController));
 
     /**
      * @swagger
-     * /api/v1/service-orders/{serviceOrderId}/classify-hazardous:
-     *   post:
-     *     summary: Classify service order as hazardous or non-hazardous
-     *     description: Use ML algorithm to classify if a service order contains potentially hazardous materials
-     *     tags: [Service Orders]
+     * /api/v1/service-orders/batch/status/{requestId}:
+     *   get:
+     *     summary: Get batch processing status
+     *     description: Get the current status of a batch processing request
+     *     tags: [Batch Processing]
      *     security:
      *       - bearerAuth: []
      *     parameters:
      *       - in: path
-     *         name: serviceOrderId
+     *         name: requestId
      *         required: true
      *         schema:
      *           type: string
-     *         description: Service order ID to classify
+     *         description: Batch processing request ID
+     *         example: "batch_1640995200000"
      *     responses:
      *       200:
-     *         description: Classification completed successfully
+     *         description: Status retrieved successfully
      *         content:
      *           application/json:
      *             schema:
      *               type: object
      *               properties:
-     *                 serviceOrderId:
+     *                 requestId:
      *                   type: string
-     *                 classification:
+     *                 status:
+     *                   type: string
+     *                   enum: [INITIALIZING, IN_PROGRESS, COMPLETED, FAILED]
+     *                 progress:
      *                   type: object
      *                   properties:
-     *                     classification:
-     *                       type: string
-     *                       enum: [hazardous, non-hazardous]
-     *                     confidence:
-     *                       type: number
-     *                       minimum: 0
-     *                       maximum: 1
-     *                     originalText:
-     *                       type: string
-     *                     normalizedText:
-     *                       type: string
-     *                     timestamp:
-     *                       type: string
-     *                       format: date-time
-     *                 modelMetrics:
-     *                   type: object
-     *                   properties:
-     *                     modelWeights:
-     *                       type: object
-     *                     thresholds:
-     *                       type: object
-     *                     keywordCounts:
-     *                       type: object
-     *                     targetAccuracy:
-     *                       type: number
-     *                     modelType:
-     *                       type: string
-     *                 timestamp:
-     *                   type: string
-     *                   format: date-time
-     *       400:
-     *         description: Invalid request data
+     *                     totalServiceOrders:
+     *                       type: integer
+     *                     processedCount:
+     *                       type: integer
+     *                     percentage:
+     *                       type: integer
+     *                 processingTime:
+     *                   type: integer
+     *                   description: Processing time in milliseconds
+     *                 errors:
+     *                   type: array
+     *                   items:
+     *                     type: string
+     *       404:
+     *         description: Processing request not found
      *         content:
      *           application/json:
      *             schema:
      *               $ref: '#/components/schemas/ErrorResponse'
      *       401:
      *         description: Authentication required
-     *         content:
-     *           application/json:
-     *             schema:
-     *               $ref: '#/components/schemas/ErrorResponse'
-     *       403:
-     *         description: Employee or admin access required
-     *         content:
-     *           application/json:
-     *             schema:
-     *               $ref: '#/components/schemas/ErrorResponse'
-     *       404:
-     *         description: Service order not found
      *         content:
      *           application/json:
      *             schema:
@@ -223,7 +304,57 @@ export function createServiceOrderRoutes(serviceOrderController) {
      *             schema:
      *               $ref: '#/components/schemas/ErrorResponse'
      */
-    router.post('/:serviceOrderId/classify-hazardous', authMiddleware.requireEmployee, serviceOrderController.classifyHazardous.bind(serviceOrderController));
+    router.get('/batch/status/:requestId', authMiddleware.authenticate, authMiddleware.requireEmployee, serviceOrderController.getProcessingStatus.bind(serviceOrderController));
+
+    /**
+     * @swagger
+     * /api/v1/service-orders/batch/metrics:
+     *   get:
+     *     summary: Get batch processing metrics
+     *     description: Get overall metrics for batch processing operations
+     *     tags: [Batch Processing]
+     *     security:
+     *       - bearerAuth: []
+     *     responses:
+     *       200:
+     *         description: Metrics retrieved successfully
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: object
+     *               properties:
+     *                 activeProcesses:
+     *                   type: integer
+     *                 completedProcesses:
+     *                   type: integer
+     *                 failedProcesses:
+     *                   type: integer
+     *                 totalProcesses:
+     *                   type: integer
+     *                 averageProcessingTime:
+     *                   type: number
+     *                 totalServiceOrdersProcessed:
+     *                   type: integer
+     *       401:
+     *         description: Authentication required
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/ErrorResponse'
+     *       403:
+     *         description: Admin access required
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/ErrorResponse'
+     *       500:
+     *         description: Internal server error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/ErrorResponse'
+     */
+    router.get('/batch/metrics', authMiddleware.authenticate, authMiddleware.requireAdmin, serviceOrderController.getProcessingMetrics.bind(serviceOrderController));
 
     return router;
 }
