@@ -37,6 +37,16 @@ docker-compose up -d
 
 ## Authentication
 
+### Security Features
+
+The WMS implements secure authentication using JWT tokens stored in HTTP-only cookies:
+
+- **JWT Tokens**: Secure, stateless authentication tokens
+- **HTTP-Only Cookies**: Tokens stored in secure cookies (not localStorage)
+- **Automatic Token Management**: Frontend automatically includes tokens in API requests
+- **Token Expiration**: Tokens expire after 24 hours for security
+- **Automatic Logout**: Users redirected to login when tokens expire or become invalid
+
 ### Default Login Credentials
 
 ```json
@@ -47,6 +57,14 @@ docker-compose up -d
 ```
 
 ### Using the API
+
+#### Frontend
+1. Login through the web interface
+2. Token automatically stored in secure cookie
+3. All API requests automatically include the token
+4. Automatic logout when token expires
+
+#### Direct API Access
 1. Login via `POST /api/v1/auth/login`
 2. Copy the JWT token from the response
 3. Click "Authorize" in Swagger and paste the token
@@ -134,12 +152,12 @@ Material Analysis Flow:
     ┌─────┴─────┐
     │           │
     ▼           ▼
-┌─────────┐ ┌─────────┐
-│ Use ML  │ │Trigger  │
-│ Result  │ │AI Analysis│
-│(High    │ │(Low     │
-│Confidence)│ │Confidence)│
-└─────────┘ └─────────┘
+┌───────────┐ ┌───────────┐
+│ Use ML    │ │Trigger    │
+│ Result    │ │AI Analysis│
+│(High      │ │(Low       │
+│Confidence)│ |Confidence)│
+└───────────┘ └───────────┘
 ```
 
 ### Cost Savings Benefits
@@ -187,7 +205,7 @@ The system prioritizes safety over cost savings:
 ## Architecture
 
 ### Technology Stack
-- **Frontend:** TBD (placeholder for future implementation)
+- **Frontend:** React.ts
 - **Backend:** Node.js with Express
 - **Database:** PostgreSQL
 - **Message Queue:** RabbitMQ
