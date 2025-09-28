@@ -67,13 +67,105 @@ The system processes waste material requests through the following workflow:
 
 ### Key Features
 
-- **ML Classification:** Rule-based algorithm with 90%+ accuracy
+- **ML-First Analysis:** Local analysis that classifies materials
 - **AI Fallback System:** Gemini AI for complex cases requiring higher confidence
 - **Batch Processing:** Efficient processing of thousands of service orders
 - **Real-time Processing:** Asynchronous material analysis via RabbitMQ
 - **Rate Limiting:** Automatic API call management and throttling
 - **Secure Authentication:** JWT-based authentication system
 - **Modular Architecture:** Clean separation of concerns for maintainability
+
+## ML-First Analysis System
+
+### Cost-Optimized Approach
+
+The WMS uses a **ML-first analysis strategy** designed to minimize AI API costs while maintaining high accuracy. This approach processes materials locally using advanced pattern recognition before calling expensive AI services.
+
+### How It Works
+
+#### 1. **Local ML Analysis (Cost-Free)**
+Every material is first analyzed by our custom ML engine that uses:
+
+- **Enhanced Keyword Detection**: 200+ hazardous keywords including:
+  - Chemical compounds (acids, solvents, pesticides)
+  - Radioactive materials (uranium, cesium, glow patterns)
+  - Hazardous characteristics (flammable, toxic, corrosive)
+  - Suspicious patterns (glowing, drops, unknown substances)
+
+- **Advanced Pattern Recognition**:
+  - Chemical formulas and concentrations
+  - Hazard symbols and warning terms
+  - Glow patterns (phosphorescent/luminescent materials)
+  - Liquid patterns (drops, solutions, concentrates)
+  - Suspicious patterns (unknown, mystery, contaminated)
+
+- **Suspicious Combination Rules**:
+  - Glowing + Liquid = 90% hazardous score
+  - Glowing + Unknown = 85% hazardous score
+  - Liquid + Unknown = 80% hazardous score
+  - Any radioactive pattern = 95% hazardous score
+
+#### 2. **AI Analysis Trigger (When Needed)**
+AI analysis is only triggered when ML confidence is below 75%, specifically for:
+
+- **Suspicious Materials**: High hazard score but low confidence
+- **Complex Cases**: Materials with ambiguous descriptions
+- **Edge Cases**: Unusual combinations requiring EPA expertise
+- **Verification**: When ML detects suspicious patterns but needs confirmation
+
+#### 3. **Confidence-Based Decision Making**
+```
+Material Analysis Flow:
+┌─────────────────┐
+│ Material Input  │
+└─────────┬───────┘
+          │
+          ▼
+┌─────────────────┐
+│ ML Analysis     │
+│ (Cost-Free)     │
+└─────────┬───────┘
+          │
+          ▼
+┌─────────────────┐
+│ Confidence ≥75%?│
+└─────────┬───────┘
+          │
+    ┌─────┴─────┐
+    │           │
+    ▼           ▼
+┌─────────┐ ┌─────────┐
+│ Use ML  │ │Trigger  │
+│ Result  │ │AI Analysis│
+│(High    │ │(Low     │
+│Confidence)│ │Confidence)│
+└─────────┘ └─────────┘
+```
+
+### Cost Savings Benefits
+
+- **Faster Processing**: Local analysis completes in milliseconds
+- **Scalable**: Can process thousands of materials without API limits
+- **Reliable**: No dependency on external API availability
+- **Conservative Safety**: When in doubt, classify as hazardous
+
+### Example Scenarios
+
+| Material Description | ML Analysis | Confidence | AI Triggered? | Cost |
+|---------------------|-------------|------------|---------------|------|
+| "Office paper" | Non-Hazardous | 95% | ❌ No | $0 |
+| "Old laptop batteries" | Hazardous | 92% | ❌ No | $0 |
+| "Green drops that glow" | Hazardous | 60% | ✅ Yes | $0.01 |
+| "Unknown chemical" | Hazardous | 55% | ✅ Yes | $0.01 |
+| "Clean aluminum cans" | Non-Hazardous | 88% | ❌ No | $0 |
+
+### Safety-First Design
+
+The system prioritizes safety over cost savings:
+- **Conservative Classification**: Suspicious materials are flagged as hazardous
+- **Low Confidence = AI Analysis**: Uncertain cases get expert AI review
+- **Multiple Detection Layers**: Keywords + Patterns + Combination Rules
+- **EPA Compliance**: AI analysis provides detailed regulatory compliance
 
 ## API Endpoints
 
