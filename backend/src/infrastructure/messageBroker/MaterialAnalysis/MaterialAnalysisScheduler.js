@@ -35,7 +35,13 @@ export class MaterialAnalysisScheduler {
         try {
             console.log('Checking for unanalyzed materials...');
 
-            const serviceOrders = await this.serviceOrderRepository.findAll();
+            // Only get service orders from the last 30 days to avoid past appointment date issues
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            
+            const serviceOrders = await this.serviceOrderRepository.findAll({
+                createdAfter: thirtyDaysAgo
+            });
 
             let materialsToProcess = [];
 

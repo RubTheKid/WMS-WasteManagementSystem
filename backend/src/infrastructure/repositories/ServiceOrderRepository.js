@@ -101,6 +101,12 @@ export class ServiceOrderRepository extends IServiceOrderRepository {
       paramCount++;
     }
 
+    if (filters.createdAfter) {
+      query += ` AND created_at >= $${paramCount}`;
+      params.push(filters.createdAfter);
+      paramCount++;
+    }
+
     query += ' ORDER BY created_at DESC';
 
     const result = await this.db.query(query, params);
@@ -112,6 +118,7 @@ export class ServiceOrderRepository extends IServiceOrderRepository {
         [orderRow.id]
       );
       const items = itemsResult.rows.map(row => this.mapRowToMaterial(row));
+      // Skip validation for all GET operations (default behavior)
       orders.push(this.mapRowToServiceOrder(orderRow, items));
     }
 
@@ -278,7 +285,7 @@ export class ServiceOrderRepository extends IServiceOrderRepository {
     };
   }
 
-  mapRowToServiceOrder(row, materials) {
+  mapRowToServiceOrder(row, materials, skipValidation = true) {
     return new ServiceOrder(
       row.id.toString(),
       row.customer_name,
@@ -287,7 +294,8 @@ export class ServiceOrderRepository extends IServiceOrderRepository {
       row.status,
       new Date(row.created_at),
       new Date(row.updated_at),
-      materials
+      materials,
+      skipValidation
     );
   }
 

@@ -7,10 +7,13 @@ export class ServiceOrder {
     status = ServiceOrderStatus.SCHEDULED,
     createdAt,
     updatedAt,
-    materials = []
+    materials = [],
+    skipValidation = false
   ) {
     this.validateCustomerData(customerName, companyName);
-    this.validateAppointmentDate(appointmentDate);
+    if (!skipValidation) {
+      this.validateAppointmentDate(appointmentDate);
+    }
     this.validateStatus(status);
     this.validateMaterials(materials);
 
