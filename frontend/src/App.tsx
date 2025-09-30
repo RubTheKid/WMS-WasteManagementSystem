@@ -25,7 +25,11 @@ function App() {
           />
           <Route
             path="/login"
-            element={<LoginPage />}
+            element={
+              <PublicLayout>
+                <LoginPage />
+              </PublicLayout>
+            }
           />
 
           {/* Protected admin routes */}

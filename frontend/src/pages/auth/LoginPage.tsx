@@ -26,22 +26,16 @@ const LoginPage: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-md w-full space-y-8">
-                <div>
-                    <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                        Sign in to WMS
-                    </h2>
-                    <p className="mt-2 text-center text-sm text-gray-600">
-                        Waste Management System
-                    </p>
+        <div className="max-w-md mx-auto py-12 px-4 sm:px-6 lg:px-8">
+            <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 space-y-6">
+                <div className="text-center">
+                    <h2 className="text-3xl font-bold text-gray-900">Sign in to WMS</h2>
+                    <p className="mt-2 text-sm text-gray-600">Waste Management System</p>
                 </div>
-                <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+                <form className="space-y-6" onSubmit={handleSubmit}>
                     <div className="rounded-md shadow-sm -space-y-px">
                         <div>
-                            <label htmlFor="email" className="sr-only">
-                                Email address
-                            </label>
+                            <label htmlFor="email" className="sr-only">Email address</label>
                             <input
                                 id="email"
                                 name="email"
@@ -55,9 +49,7 @@ const LoginPage: React.FC = () => {
                             />
                         </div>
                         <div>
-                            <label htmlFor="password" className="sr-only">
-                                Password
-                            </label>
+                            <label htmlFor="password" className="sr-only">Password</label>
                             <input
                                 id="password"
                                 name="password"
